@@ -31,6 +31,8 @@ public class ConversationController {
         AsyncHttpClient client = new DefaultAsyncHttpClient();
         GenerateRequestBody body = new GenerateRequestBody();
         AtomicReference<Response> response = new AtomicReference<>();
+        HttpHeaders header = new HttpHeaders();
+        ClientResponse clientResponse = new ClientResponse();
 
         body.maxTokens = cohereConfig.maxTokens;
         body.returnLikelihoods = GenerateRequestBody.ReturnLikelihood.NONE;
@@ -54,10 +56,10 @@ public class ConversationController {
             throw new RuntimeException(e);
         }
 
-        HttpHeaders header = new HttpHeaders();
-        ClientResponse clientResponse = new ClientResponse();
-
         header.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        header.set(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "POST, PUT, DELETE, GET, OPTIONS");
+        header.set(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "*");
+        header.set(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "Origin, X-Requested-With, Content-Type, Accept, Authorization");
         header.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         clientResponse.generatedResponse = GenerateResponseBody
                 .fromJson(response.get().getResponseBody())
