@@ -28,18 +28,19 @@ public class ConversationController {
     @PostMapping("/generate")
     public ResponseEntity<ClientResponse> generate(@RequestBody ClientRequest request) {
 
-        AsyncHttpClient client = new DefaultAsyncHttpClient();
-        GenerateRequestBody body = new GenerateRequestBody();
         AtomicReference<Response> response = new AtomicReference<>();
-        HttpHeaders header = new HttpHeaders();
         ClientResponse clientResponse = new ClientResponse();
+        HttpHeaders header = new HttpHeaders();
 
-        body.maxTokens = cohereConfig.maxTokens;
-        body.returnLikelihoods = GenerateRequestBody.ReturnLikelihood.NONE;
-        body.truncate = GenerateRequestBody.Truncate.END;
-        body.prompt = request.prompt;
+        try (AsyncHttpClient client = new DefaultAsyncHttpClient()) {
 
-        try {
+            GenerateRequestBody body = new GenerateRequestBody();
+
+            body.maxTokens = cohereConfig.maxTokens;
+            body.returnLikelihoods = GenerateRequestBody.ReturnLikelihood.NONE;
+            body.truncate = GenerateRequestBody.Truncate.END;
+            body.prompt = request.prompt;
+
             client.prepare("POST", cohereConfig.generateUrl)
                     .setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
@@ -49,18 +50,14 @@ public class ConversationController {
                     .toCompletableFuture()
                     .thenAccept(response::set)
                     .join();
-
-            client.close();
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        header.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-        header.set(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "POST, PUT, DELETE, GET, OPTIONS");
-        header.set(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "*");
-        header.set(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-        header.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        header.setAccessControlAllowOrigin("*");
+        header.setContentType(MediaType.APPLICATION_JSON);
+
         clientResponse.generatedResponse = GenerateResponseBody
                 .fromJson(response.get().getResponseBody())
                 .generations.get(0).text;
