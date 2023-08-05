@@ -55,7 +55,6 @@ public class ConversationController {
             throw new RuntimeException(e);
         }
 
-        header.setAccessControlAllowOrigin("*");
         header.setContentType(MediaType.APPLICATION_JSON);
 
         clientResponse.generatedResponse = GenerateResponseBody
